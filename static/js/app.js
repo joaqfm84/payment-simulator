@@ -1,4 +1,7 @@
-const API_BASE_URL = 'http://localhost:5000';
+// Dynamic API base URL - works for both local development and production
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000' 
+    : window.location.origin;
 
 function App() {
     const [transfers, setTransfers] = React.useState([]);
