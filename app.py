@@ -265,14 +265,14 @@ class WireTransfer:
         def simulate_clearing():
             # Step 1: Message validation (2 seconds)
             time.sleep(2)
-            validation_details = f"""Validating ISO 20022 PACS.008 message format and required fields:
+            validation_details = f"""🏦 **ORIGINATING BANK** validates the PACS.008 message format and required fields:
 
-📋 XML Schema Validation:
+📋 **XML Schema Validation** (performed by bank's payment system):
 • Namespace compliance: urn:iso:std:iso:20022:tech:xsd:pacs.008.001.10
 • XML structure validation against ISO 20022 schema
 • Element hierarchy and nesting validation
 
-🔍 Required Fields Check:
+🔍 **Required Fields Check** (validated by originating bank):
 • GrpHdr/MsgId: LYNX{self.id[:8].upper()} ✓
 • GrpHdr/CreDtTm: {datetime.now().strftime("%Y-%m-%dT%H:%M:%S")} ✓
 • GrpHdr/NbOfTxs: 1 ✓
@@ -285,7 +285,8 @@ class WireTransfer:
 • CdtTrfTxInf/DbtrAgt/FinInstnId/BICFI: LYNXCA22XXX ✓
 • CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI: {self.creditor_bic} ✓
 
-✅ Validation Result: All required fields present and valid"""
+✅ **Validation Result**: All required fields present and valid
+📍 **Location**: Originating Bank's Payment Processing System"""
             
             self.add_processing_step("PACS.008 message validation", "VALIDATING", validation_details)
             
@@ -293,34 +294,112 @@ class WireTransfer:
             time.sleep(3)
             if self.debtor_account.debit(self.amount, f"Wire transfer to {self.creditor_name}", self.id):
                 self.add_processing_step("Bank account validation & fund reservation", "VALIDATING", 
-                                       f"Verifying debtor account {self.institution_number}-{self.transit_number}-{self.account_number} and funds availability. Checking account status, balance, and transaction limits. Validating Canadian routing number format and institution code {self.institution_number}. Funds reserved: {self.amount} {self.currency}. New balance: {self.debtor_account.balance} {self.currency}")
+                                       f"""🏦 **ORIGINATING BANK** validates the debtor account and reserves funds:
+
+💰 **Account Validation** (performed by originating bank):
+• Account verification: {self.institution_number}-{self.transit_number}-{self.account_number}
+• Account status check: Active ✓
+• Balance verification: {self.debtor_account.balance} {self.currency} available
+• Transaction limits validation: Within daily limits ✓
+• Canadian routing number validation: {self.institution_number} (valid institution code)
+
+💳 **Fund Reservation** (performed by originating bank):
+• Amount reserved: {self.amount} {self.currency}
+• New available balance: {self.debtor_account.balance} {self.currency}
+• Funds held for settlement (not yet transferred)
+
+📍 **Location**: Originating Bank's Core Banking System""")
             else:
                 self.add_processing_step("Bank account validation failed", "FAILED", 
-                                       f"Insufficient funds in account {self.institution_number}-{self.transit_number}-{self.account_number}. Required: {self.amount} {self.currency}, Available: {self.debtor_account.balance} {self.currency}")
+                                       f"""❌ **ORIGINATING BANK** validation failed:
+
+💰 **Insufficient Funds** (detected by originating bank):
+• Account: {self.institution_number}-{self.transit_number}-{self.account_number}
+• Required amount: {self.amount} {self.currency}
+• Available balance: {self.debtor_account.balance} {self.currency}
+• Shortfall: {self.amount - self.debtor_account.balance} {self.currency}
+
+📍 **Location**: Originating Bank's Core Banking System
+🚫 **Action**: Transfer rejected - no funds reserved""")
                 return
             
             # Step 3: Message sent to clearing system (2 seconds)
             time.sleep(2)
             clearing_system = "Lynx" if self.currency == "CAD" else "SWIFT"
             self.add_processing_step("Message sent to Lynx/SWIFT", "PROCESSING", 
-                                   f"PACS.008 message transmitted to {clearing_system} clearing system. For {self.currency} transfers: {'Lynx (Payments Canada domestic system)' if self.currency == 'CAD' else 'SWIFT (international messaging network)'}. Message routing through secure financial network")
+                                   f"""🏦 **ORIGINATING BANK** sends PACS.008 message to clearing system:
+
+📤 **Message Transmission** (performed by originating bank):
+• PACS.008 message sent to {clearing_system} clearing system
+• Message routing through secure financial network
+• End-to-end encryption applied
+
+🌐 **Clearing System Selection**:
+• {clearing_system} system selected for {self.currency} transfer
+• {'Lynx (Payments Canada domestic system)' if self.currency == 'CAD' else 'SWIFT (international messaging network)'}
+
+📍 **Location**: Originating Bank → {clearing_system} Network
+🔐 **Security**: Encrypted financial messaging""")
             
             # Step 4: Clearing processing and interbank settlement (4 seconds)
             time.sleep(4)
             self.add_processing_step("Clearing and settlement", "SETTLING", 
-                                   f"Processing through {clearing_system} for {self.amount} {self.currency}. Interbank settlement between originating bank (LYNXCA22XXX) and receiving bank ({self.creditor_bic}). Real-time gross settlement (RTGS) processing with finality")
+                                   f"""🏛️ **{clearing_system.upper()} CLEARING SYSTEM** processes the interbank settlement:
+
+💼 **Clearing Processing** (performed by {clearing_system}):
+• Message received and validated by {clearing_system}
+• Transaction amount: {self.amount} {self.currency}
+• Real-time gross settlement (RTGS) processing
+
+🏦 **Interbank Settlement** (performed by {clearing_system}):
+• Originating bank: LYNXCA22XXX (debtor's bank)
+• Receiving bank: {self.creditor_bic} (creditor's bank)
+• Settlement finality achieved - transaction is irrevocable
+• Funds moved between bank settlement accounts
+
+📍 **Location**: {clearing_system} Clearing System
+⚡ **Processing**: Real-time gross settlement (RTGS)""")
             
             # Step 5: Funds credited to beneficiary (2 seconds)
             time.sleep(2)
             self.creditor_account.credit(self.amount, f"Wire transfer from {self.debtor_name}", self.id)
             self.add_processing_step("Funds credited to beneficiary", "COMPLETED", 
-                                   f"Transfer of {self.amount} {self.currency} completed successfully. Funds credited to {self.creditor_name} account {self.creditor_iban} at {self.creditor_bic}. Settlement finality achieved - transaction is irrevocable. Creditor new balance: {self.creditor_account.balance} {self.currency}")
+                                   f"""🏦 **RECEIVING BANK** credits funds to the beneficiary account:
+
+💰 **Fund Credit** (performed by receiving bank):
+• Amount credited: {self.amount} {self.currency}
+• Beneficiary: {self.creditor_name}
+• Account: {self.creditor_iban}
+• Bank: {self.creditor_bic}
+• New balance: {self.creditor_account.balance} {self.currency}
+
+✅ **Settlement Finality**:
+• Transaction is irrevocable
+• Funds are immediately available to beneficiary
+• Settlement confirmation sent to originating bank
+
+📍 **Location**: Receiving Bank's Core Banking System
+📧 **Notification**: Beneficiary notified of credit""")
             
             # Step 6: Generate PACS.002 confirmation message (1 second)
             time.sleep(1)
             self.pacs_002_xml = self.generate_pacs_002()
             self.add_processing_step("PACS.002 confirmation sent", "COMPLETED", 
-                                   f"PACS.002 confirmation message sent to originating bank. End-to-end reference: E2E{self.id[:16].upper()}. Transaction status: ACSP (AcceptedSettlementCompleted). Transaction traceability maintained throughout the entire process. Customer notification sent")
+                                   f"""🏦 **RECEIVING BANK** sends PACS.002 confirmation to originating bank:
+
+📤 **Confirmation Message** (sent by receiving bank):
+• PACS.002 status report generated
+• End-to-end reference: E2E{self.id[:16].upper()}
+• Transaction status: ACSP (AcceptedSettlementCompleted)
+• Confirmation sent to originating bank
+
+📧 **Customer Notifications**:
+• Originating bank notifies debtor of successful transfer
+• Receiving bank notifies creditor of received funds
+• Transaction traceability maintained throughout process
+
+📍 **Location**: Receiving Bank → Originating Bank
+✅ **Status**: Transfer completed successfully""")
         
         # Start the simulation in a separate thread
         thread = threading.Thread(target=simulate_clearing)
