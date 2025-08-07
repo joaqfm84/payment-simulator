@@ -194,10 +194,19 @@
             display: block;
         }
         
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
         .table {
             width: 100%;
+            min-width: 800px; /* Ensure table has minimum width for content */
             border-collapse: collapse;
-            margin-top: 20px;
+            margin: 0;
         }
         
         .table th,

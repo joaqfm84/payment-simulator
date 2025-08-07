@@ -341,49 +341,51 @@ function TransferList({ transfers, onViewDetails, onRefresh }) {
                         No transfers found. Create your first transfer above.
                     </div>
                 ) : (
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Debtor</th>
-                                <th>Creditor</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {transfers.map((transfer) => (
-                                <tr key={transfer.id}>
-                                    <td>
-                                        <code style={{ fontSize: '12px' }}>{transfer.id.slice(0, 8)}...</code>
-                                    </td>
-                                    <td>{transfer.debtor_name}</td>
-                                    <td>{transfer.creditor_name}</td>
-                                    <td>
-                                        {transfer.amount} {transfer.currency}
-                                    </td>
-                                    <td>
-                                        <span className={`badge ${getStatusColor(transfer.status)}`}>
-                                            {transfer.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {new Date(transfer.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td>
-                                        <button 
-                                            className="btn btn-secondary btn-sm" 
-                                            onClick={() => onViewDetails(transfer.id)}
-                                        >
-                                            View
-                                        </button>
-                                    </td>
+                    <div className="table-wrapper">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Debtor</th>
+                                    <th>Creditor</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {transfers.map((transfer) => (
+                                    <tr key={transfer.id}>
+                                        <td>
+                                            <code style={{ fontSize: '12px' }}>{transfer.id.slice(0, 8)}...</code>
+                                        </td>
+                                        <td>{transfer.debtor_name}</td>
+                                        <td>{transfer.creditor_name}</td>
+                                        <td>
+                                            {transfer.amount} {transfer.currency}
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${getStatusColor(transfer.status)}`}>
+                                                {transfer.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {new Date(transfer.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td>
+                                            <button 
+                                                className="btn btn-secondary btn-sm" 
+                                                onClick={() => onViewDetails(transfer.id)}
+                                            >
+                                                View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
         </div>
